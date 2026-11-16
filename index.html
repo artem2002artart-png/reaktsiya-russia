@@ -1,0 +1,2053 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>РЕАКЦИЯ — версия 8.0</title>
+    <meta
+      name="description"
+      content="Быстрая аркада на реакцию: тренируй точность, собирай комбо, открывай скины и соревнуйся в рейтинге."
+    />
+    <meta name="theme-color" content="#080e1b" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="РЕАКЦИЯ — проверь свою скорость!" />
+    <meta
+      property="og:description"
+      content="30 секунд на реакцию. Побей рекорд друга и попади в таблицу лидеров!"
+    />
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 20px;
+        text-align: center;
+        color: white;
+        font-family: Arial, sans-serif;
+        background: radial-gradient(circle at top, #19334a, #080e1b 75%);
+      }
+
+      h1 {
+        color: #38e8b5;
+        font-size: 42px;
+        letter-spacing: 5px;
+        text-shadow: 0 0 20px #38e8b5;
+      }
+
+      .subtitle {
+        color: #91a9bc;
+        letter-spacing: 3px;
+        font-size: 12px;
+      }
+
+      .panel {
+        width: 100%;
+        max-width: 550px;
+        margin: 25px auto;
+        padding: 25px;
+        background: #17283b;
+        border: 1px solid #31536b;
+        border-radius: 20px;
+      }
+
+      button,
+      select {
+        padding: 13px 22px;
+        margin: 8px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      button {
+        background: #38e8b5;
+        color: #081522;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #8affdc;
+      }
+
+      button.secondary {
+        background: #31536b;
+        color: white;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      select {
+        background: #253b52;
+        color: white;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .stats {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 20px auto;
+      }
+
+      .stat {
+        background: #17283b;
+        padding: 12px;
+        border-radius: 12px;
+        min-width: 90px;
+      }
+
+      .stat small {
+        display: block;
+        color: #91a9bc;
+        margin-bottom: 7px;
+      }
+
+      .stat strong {
+        color: #38e8b5;
+        font-size: 23px;
+      }
+
+      #game {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        height: 350px;
+        margin: auto;
+        overflow: hidden;
+        border: 2px solid #38e8b5;
+        border-radius: 18px;
+        background: #101d30;
+        box-shadow: 0 0 25px #38e8b544;
+      }
+
+      #target {
+        position: absolute;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        animation: pulse 0.7s infinite alternate;
+      }
+
+      @keyframes pulse {
+        from {
+          transform: scale(0.9);
+        }
+        to {
+          transform: scale(1.08);
+        }
+      }
+
+      #message {
+        min-height: 30px;
+        color: #38e8b5;
+        font-size: 19px;
+        margin: 20px;
+      }
+
+      #skins button {
+        display: block;
+        width: 80%;
+        max-width: 280px;
+        margin: 12px auto;
+      }
+
+      #shopCoins,
+      #menuCoins {
+        color: #ffd76b;
+        font-size: 19px;
+        margin: 15px;
+      }
+
+      /* ===== REACTION 5.0: polish, profile and effects ===== */
+      body {
+        padding: clamp(10px, 3vw, 20px);
+      }
+      button,
+      select {
+        min-height: 44px;
+      }
+      button:focus-visible,
+      select:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 3px;
+      }
+      .v5-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 12px;
+        text-align: left;
+        margin-top: 18px;
+      }
+      .v5-card {
+        background: #0d1b2b;
+        border: 1px solid #31536b;
+        border-radius: 14px;
+        padding: 14px;
+      }
+      .v5-card h3 {
+        color: #38e8b5;
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+      .xp-track {
+        height: 11px;
+        background: #263c50;
+        border-radius: 20px;
+        overflow: hidden;
+        margin: 8px 0;
+      }
+      .xp-fill {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, #38e8b5, #38a8ff);
+        transition: width 0.35s ease;
+      }
+      .quest-line,
+      .achievement-line {
+        margin: 9px 0;
+        line-height: 1.4;
+        font-size: 14px;
+      }
+      .achievement-line small {
+        color: #91a9bc;
+      }
+      .hit-float {
+        position: absolute;
+        z-index: 5;
+        pointer-events: none;
+        color: #fff;
+        font-weight: 900;
+        text-shadow: 0 1px 8px #000;
+        animation: floatUp 0.65s ease-out forwards;
+      }
+      @keyframes floatUp {
+        to {
+          opacity: 0;
+          transform: translateY(-48px) scale(1.25);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      @media (max-width: 500px) {
+        h1 {
+          font-size: 32px;
+        }
+        #game {
+          height: 320px;
+        }
+      }
+
+      /* ===== ПУБЛИЧНЫЙ РЕЛИЗ 5.0: адаптивность и дополнительные экраны ===== */
+      .menu-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: #020812dd;
+      }
+      .modal-card {
+        width: min(100%, 520px);
+        max-height: 90vh;
+        overflow: auto;
+        padding: 24px;
+        border: 1px solid #38e8b5;
+        border-radius: 20px;
+        background: #17283b;
+        box-shadow: 0 0 35px #38e8b544;
+        text-align: left;
+      }
+      .modal-card h2 {
+        color: #38e8b5;
+        text-align: center;
+      }
+      .modal-card p,
+      .modal-card li {
+        line-height: 1.55;
+      }
+      .setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #31536b;
+      }
+      .setting-row input {
+        width: 22px;
+        height: 22px;
+        accent-color: #38e8b5;
+      }
+      .result-score {
+        color: #38e8b5;
+        font-size: 42px;
+        font-weight: 900;
+        text-align: center;
+      }
+      .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      .leaderboard-table th,
+      .leaderboard-table td {
+        padding: 9px 5px;
+        border-bottom: 1px solid #31536b;
+        text-align: left;
+      }
+      .leaderboard-table th {
+        color: #38e8b5;
+      }
+      .muted {
+        color: #91a9bc;
+        font-size: 13px;
+      }
+      .online-form {
+        display: grid;
+        gap: 9px;
+        margin: 14px 0;
+      }
+      .online-form input {
+        width: 100%;
+        min-height: 44px;
+        padding: 11px 13px;
+        border: 1px solid #31536b;
+        border-radius: 10px;
+        background: #0d1b2b;
+        color: #fff;
+        font-size: 16px;
+      }
+      .online-status {
+        min-height: 22px;
+        color: #ffd76b;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .online-table-wrap {
+        overflow-x: auto;
+      }
+      .online-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border: 1px solid #38e8b5;
+        border-radius: 99px;
+        color: #38e8b5;
+        font-size: 11px;
+      }
+      .config-note {
+        padding: 10px;
+        border-radius: 10px;
+        background: #0d1b2b;
+        color: #b7c9d8;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      #game {
+        touch-action: manipulation;
+      }
+      #target:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 5px;
+      }
+      button:active {
+        transform: translateY(1px) scale(0.99);
+      }
+      button {
+        transition:
+          background 0.15s ease,
+          transform 0.1s ease;
+      }
+      /* ===== REACTION 8.0: mobile-first polish ===== */
+      html {
+        min-height: 100%;
+        background: #080e1b;
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        min-height: 100svh;
+        overscroll-behavior-y: contain;
+      }
+      #game {
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #target {
+        touch-action: manipulation;
+        -webkit-user-drag: none;
+      }
+      .menu-actions button {
+        flex: 1 1 145px;
+      }
+      .leaderboard-filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 12px 0;
+        text-align: left;
+      }
+      .leaderboard-filters label {
+        display: grid;
+        gap: 5px;
+        color: #91a9bc;
+        font-size: 12px;
+      }
+      .leaderboard-filters select {
+        width: 100%;
+        margin: 0;
+        min-width: 0;
+      }
+      .competition-note {
+        padding: 10px 12px;
+        margin: 10px 0;
+        border: 1px solid #31536b;
+        border-radius: 12px;
+        background: #0d1b2b;
+        color: #b7c9d8;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .highlight-row {
+        background: #38e8b51a;
+      }
+      @media (max-width: 600px) {
+        body {
+          padding: max(10px, env(safe-area-inset-top))
+            max(10px, env(safe-area-inset-right))
+            max(14px, env(safe-area-inset-bottom))
+            max(10px, env(safe-area-inset-left));
+        }
+        h1 {
+          font-size: clamp(27px, 8vw, 38px);
+          letter-spacing: 3px;
+        }
+        .panel {
+          padding: 16px;
+          margin: 14px auto;
+        }
+        #game {
+          height: min(58svh, 440px);
+          min-height: 260px;
+        }
+        button,
+        select {
+          min-height: 48px;
+        }
+        .menu-actions button {
+          flex: 1 1 135px;
+        }
+        .leaderboard-filters {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          gap: 6px;
+          margin: 12px auto;
+        }
+        .stat {
+          flex: 1 1 38%;
+          min-width: 0;
+          padding: 9px 5px;
+        }
+        .stat strong {
+          font-size: 20px;
+        }
+        button,
+        select {
+          margin: 5px;
+          padding: 12px 15px;
+          font-size: 15px;
+        }
+        .v5-grid {
+          grid-template-columns: 1fr;
+        }
+        .modal-card {
+          padding: 17px;
+        }
+      }
+
+      /* ===== VK MINI APP: прокрутка и адаптация под iframe ===== */
+      /* Внутренняя прокрутка документа игры внутри iframe VK */
+      html {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      body {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: max(64px, calc(env(safe-area-inset-bottom) + 48px));
+        scroll-padding-bottom: 64px;
+      }
+
+      #menu,
+      #shop,
+      #gameScreen {
+        max-width: 100%;
+      }
+
+      .panel {
+        overflow: visible;
+      }
+
+      .modal-backdrop {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .modal-card {
+        flex: 0 0 auto;
+        max-height: calc(100vh - 32px);
+        max-height: calc(100svh - 32px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      @media (max-height: 760px) {
+        body {
+          padding-top: max(8px, env(safe-area-inset-top));
+        }
+
+        h1 {
+          margin-top: 8px;
+          margin-bottom: 8px;
+        }
+
+        .panel {
+          margin-top: 10px;
+          margin-bottom: 10px;
+        }
+
+        #game {
+          height: min(48svh, 350px);
+          min-height: 220px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .menu-actions button {
+          flex-basis: 100%;
+        }
+
+        .panel {
+          padding: 13px;
+        }
+      }
+
+      /* Дополнительный запас снизу для iframe VK и длинного экрана результата */
+      body {
+        padding-bottom: max(64px, calc(env(safe-area-inset-bottom) + 48px));
+        scroll-padding-bottom: 64px;
+      }
+
+      #resultPanel {
+        padding-bottom: 34px;
+        margin-bottom: 28px;
+      }
+
+      .online-status {
+        min-height: 24px;
+        padding: 4px 2px;
+        overflow-wrap: anywhere;
+        word-break: normal;
+      }
+
+      #shareStatus {
+        max-width: 100%;
+        line-height: 1.5;
+      }
+
+      .menu-actions {
+        padding-bottom: 8px;
+      }
+    
+      /* ===== LAPTOP: компактный экран и доступ к кнопкам результата ===== */
+      @media (min-width: 601px) and (max-height: 850px) {
+        body {
+          padding-top: 8px;
+          padding-bottom: 24px;
+        }
+        h1 {
+          font-size: 34px;
+          margin-top: 8px;
+          margin-bottom: 8px;
+        }
+        .subtitle {
+          margin-bottom: 4px;
+        }
+        .stats {
+          margin: 10px auto;
+          gap: 7px;
+        }
+        .stat {
+          padding: 9px 10px;
+        }
+        #game {
+          height: min(40vh, 270px);
+          min-height: 190px;
+        }
+        #message {
+          margin: 10px;
+        }
+        #resultPanel {
+          padding: 16px 18px 24px;
+          margin-top: 12px;
+          margin-bottom: 18px;
+        }
+        .online-form {
+          gap: 6px;
+          margin: 10px 0;
+        }
+        .menu-actions {
+          gap: 4px;
+        }
+      }
+
+
+      /* ===== Кастомная внутренняя полоса прокрутки ===== */
+      body {
+        scrollbar-width: thin;
+        scrollbar-color: #6575e8 #101d30;
+      }
+      body::-webkit-scrollbar {
+        width: 10px;
+      }
+      body::-webkit-scrollbar-track {
+        background: rgba(16, 29, 48, 0.78);
+        border-left: 1px solid rgba(101, 117, 232, 0.16);
+        border-radius: 999px;
+      }
+      body::-webkit-scrollbar-thumb {
+        min-height: 42px;
+        background: linear-gradient(180deg, #8b7bff 0%, #5368e8 55%, #38a8ff 100%);
+        border: 2px solid #101d30;
+        border-radius: 999px;
+        box-shadow: 0 0 8px rgba(111, 105, 255, 0.32);
+      }
+      body::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #b0a5ff 0%, #7b8aff 55%, #62c5ff 100%);
+        box-shadow: 0 0 12px rgba(111, 105, 255, 0.62);
+      }
+      body::-webkit-scrollbar-corner {
+        background: #101d30;
+      }
+      @media (max-width: 600px) {
+        body::-webkit-scrollbar {
+          width: 6px;
+        }
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <h1>⚡ РЕАКЦИЯ</h1>
+    <div class="subtitle">ПРОВЕРЬ СВОЮ СКОРОСТЬ</div>
+    <div class="muted" style="margin-top: 7px">
+      ВЕРСИЯ 8.0 · FRIEND CHALLENGE
+    </div>
+    <div
+      id="challengeBanner"
+      class="config-note hidden"
+      style="max-width: 550px; margin: 14px auto; text-align: center"
+    ></div>
+
+    <section id="menu" class="panel">
+      <h2>Добро пожаловать!</h2>
+      <p>Готов проверить свою реакцию?</p>
+
+      <div id="menuCoins">🪙 Монеты: 0</div>
+
+      <p>Выбери сложность:</p>
+
+      <select id="difficulty">
+        <option value="easy">Лёгкая</option>
+        <option value="normal" selected>Нормальная</option>
+        <option value="hard">Сложная</option>
+      </select>
+
+      <br />
+      <button onclick="startGame()">▶ ИГРАТЬ</button>
+      <br />
+      <button class="secondary" onclick="openShop()">🛒 МАГАЗИН</button>
+      <div class="menu-actions">
+        <button class="secondary" onclick="inviteFriend()">
+          👥 ПРИГЛАСИТЬ ДРУГА
+        </button>
+        <button class="secondary" onclick="showTutorial()">🎓 ОБУЧЕНИЕ</button>
+        <button class="secondary" onclick="openLeaderboard()">
+          🏆 РЕКОРДЫ
+        </button>
+        <button class="secondary" onclick="openSettings()">⚙️ НАСТРОЙКИ</button>
+      </div>
+
+      <div id="inviteStatus" class="online-status" aria-live="polite"></div>
+      <p id="menuRecord">🏆 Рекорд: 0</p>
+
+      <div class="v5-grid" aria-live="polite">
+        <div class="v5-card">
+          <h3>⭐ ПРОФИЛЬ ИГРОКА</h3>
+          <strong id="playerLevel">Уровень 1</strong>
+          <div id="xpText">0 / 100 XP</div>
+          <div class="xp-track"><div id="xpFill" class="xp-fill"></div></div>
+          <small id="lifetimeStats">Попаданий: 0 · Игр: 0</small>
+        </div>
+        <div class="v5-card">
+          <h3>🎁 ЕЖЕДНЕВНАЯ НАГРАДА</h3>
+          <div id="dailyReward">Загрузка...</div>
+        </div>
+        <div class="v5-card">
+          <h3>🎯 ЗАДАНИЯ НА СЕГОДНЯ</h3>
+          <div id="dailyTasks"></div>
+        </div>
+        <div class="v5-card">
+          <h3>🏆 ДОСТИЖЕНИЯ</h3>
+          <div id="achievements"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameScreen" class="hidden">
+      <div class="stats">
+        <div class="stat">
+          <small>ОЧКИ</small>
+          <strong id="score">0</strong>
+        </div>
+
+        <div class="stat">
+          <small>ВРЕМЯ</small>
+          <strong id="time">30</strong>
+        </div>
+
+        <div class="stat">
+          <small>УРОВЕНЬ</small>
+          <strong id="level">1</strong>
+        </div>
+
+        <div class="stat">
+          <small>КОМБО</small>
+          <strong id="combo">x1</strong>
+        </div>
+      </div>
+
+      <div id="game">
+        <div
+          id="target"
+          role="button"
+          tabindex="0"
+          aria-label="Нажми на мишень"
+        ></div>
+      </div>
+
+      <div id="message">Лови мишень!</div>
+      <section id="resultPanel" class="panel hidden" aria-live="polite">
+        <h2 id="resultTitle">🏁 Игра окончена!</h2>
+        <div class="result-score" id="finalScore">0</div>
+        <p id="resultDetails" style="text-align: center"></p>
+        <div class="online-form">
+          <label for="playerNickname">Имя для онлайн-таблицы</label>
+          <input
+            id="playerNickname"
+            maxlength="16"
+            autocomplete="nickname"
+            placeholder="Например, SpeedFox"
+          />
+          <button
+            class="secondary"
+            id="submitOnlineScoreButton"
+            onclick="submitOnlineScore()"
+          >
+            ☁️ ОТПРАВИТЬ РЕЗУЛЬТАТ ОНЛАЙН
+          </button>
+          <div id="onlineSubmitStatus" class="online-status" aria-live="polite">
+            Можно отправить результат в общую таблицу рекордов.
+          </div>
+        </div>
+        <button
+          class="secondary"
+          id="shareResultButton"
+          onclick="shareResult()"
+        >
+          📣 ПОДЕЛИТЬСЯ РЕЗУЛЬТАТОМ
+        </button>
+        <div id="shareStatus" class="online-status" aria-live="polite"></div>
+        <div class="menu-actions">
+          <button onclick="startGame()">🔄 ЕЩЁ РАЗ</button>
+          <button class="secondary" onclick="openLeaderboard()">
+            🏆 РЕКОРДЫ
+          </button>
+          <button class="secondary" onclick="goMenu()">В МЕНЮ</button>
+        </div>
+      </section>
+      <button class="secondary" id="leaveGameButton" onclick="goMenu()">
+        В МЕНЮ
+      </button>
+    </section>
+
+    <section id="shop" class="panel hidden">
+      <h2>🛒 МАГАЗИН</h2>
+      <div id="shopCoins">🪙 Монеты: 0</div>
+      <p>Выбирай цвет своей мишени:</p>
+      <div id="skins"></div>
+      <div id="skinMessage">Выбери понравившийся скин.</div>
+      <button class="secondary" onclick="goMenu()">НАЗАД</button>
+    </section>
+
+    <div
+      id="tutorialModal"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tutorialTitle"
+    >
+      <div class="modal-card">
+        <h2 id="tutorialTitle">🎓 Как играть</h2>
+        <ol>
+          <li>Нажми «Играть», чтобы начать раунд на 30 секунд.</li>
+          <li>Нажимай на светящуюся мишень, чтобы получать очки и монеты.</li>
+          <li>Попадания подряд увеличивают комбо и множитель очков.</li>
+          <li>Промах сбрасывает комбо — старайся попадать точно.</li>
+          <li>
+            Трать монеты в магазине на новые скины. Опыт и достижения
+            сохраняются на этом устройстве.
+          </li>
+        </ol>
+        <p class="muted">Совет: на телефоне просто касайся мишени пальцем.</p>
+        <button onclick="closeModal('tutorialModal')">ПОНЯТНО!</button>
+      </div>
+    </div>
+    <div
+      id="settingsModal"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settingsTitle"
+    >
+      <div class="modal-card">
+        <h2 id="settingsTitle">⚙️ Настройки</h2>
+        <label class="setting-row"
+          ><span>Звуковые эффекты</span
+          ><input
+            id="soundToggle"
+            type="checkbox"
+            checked
+            onchange="setSoundEnabled(this.checked)"
+        /></label>
+        <label class="setting-row"
+          ><span>Фоновая музыка</span
+          ><input
+            id="musicToggle"
+            type="checkbox"
+            onchange="setMusicEnabled(this.checked)"
+        /></label>
+        <p class="muted">
+          Музыка и звуки создаются браузером. Для воспроизведения сначала
+          коснись кнопки на странице.
+        </p>
+        <button onclick="closeModal('settingsModal')">ГОТОВО</button>
+      </div>
+    </div>
+    <div
+      id="leaderboardModal"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="leaderboardTitle"
+    >
+      <div class="modal-card">
+        <h2 id="leaderboardTitle">🏆 Лучшие результаты</h2>
+        <div class="leaderboard-filters">
+          <label for="leaderboardMode"
+            >Сложность
+            <select id="leaderboardMode" onchange="renderLeaderboard()">
+              <option value="easy">Лёгкая</option>
+              <option value="normal" selected>Нормальная</option>
+              <option value="hard">Сложная</option>
+            </select>
+          </label>
+          <label for="leaderboardPeriod"
+            >Соревнование
+            <select id="leaderboardPeriod" onchange="loadOnlineLeaderboard()">
+              <option value="all">За всё время</option>
+              <option value="week" selected>За 7 дней</option>
+              <option value="today">Сегодня</option>
+            </select>
+          </label>
+          <label for="leaderboardLimit"
+            >Показать игроков
+            <select id="leaderboardLimit" onchange="loadOnlineLeaderboard()">
+              <option value="10" selected>Топ-10</option>
+              <option value="100">Топ-100</option>
+            </select>
+          </label>
+        </div>
+        <div class="competition-note">
+          ⚡ Соревнуйся с игроками на своей сложности. Недельный рейтинг
+          обновляется автоматически, а общий рейтинг хранит лучшие результаты за
+          всё время.
+        </div>
+        <div id="leaderboardContent"></div>
+        <hr style="border: 0; border-top: 1px solid #31536b; margin: 18px 0" />
+        <h3 style="color: #38e8b5">🌍 Общая онлайн-таблица</h3>
+        <div id="onlineLeaderboardContent">
+          <p class="muted">Загрузка онлайн-таблицы...</p>
+        </div>
+        <p class="muted">
+          Онлайн-рейтинг виден всем игрокам. Можно переключать общий, недельный
+          и дневной зачёт. Личная таблица хранится только на этом устройстве.
+        </p>
+        <button onclick="closeModal('leaderboardModal')">ЗАКРЫТЬ</button>
+      </div>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      // Безопасное хранилище для VK Mini Apps и обычного браузера
+      const safeStorage = (() => {
+        const memory = new Map();
+        let nativeStorage = null;
+
+        try {
+          nativeStorage = window.localStorage;
+          const testKey = "__reaction_storage_test__";
+          nativeStorage.setItem(testKey, "1");
+          nativeStorage.removeItem(testKey);
+        } catch (error) {
+          nativeStorage = null;
+        }
+
+        return {
+          getItem(key) {
+            try {
+              if (nativeStorage) {
+                const value = nativeStorage.getItem(key);
+                if (value !== null) {
+                  memory.set(key, value);
+                  return value;
+                }
+              }
+            } catch (error) {}
+
+            return memory.has(key) ? memory.get(key) : null;
+          },
+
+          setItem(key, value) {
+            const stringValue = String(value);
+            memory.set(key, stringValue);
+
+            try {
+              if (nativeStorage) {
+                nativeStorage.setItem(key, stringValue);
+              }
+            } catch (error) {}
+          },
+
+          removeItem(key) {
+            memory.delete(key);
+
+            try {
+              if (nativeStorage) {
+                nativeStorage.removeItem(key);
+              }
+            } catch (error) {}
+          },
+        };
+      })();
+
+      // Все обращения игры к localStorage будут идти через безопасную оболочку
+      const localStorage = safeStorage;
+
+      // ===== ГЛОБАЛЬНАЯ ТАБЛИЦА: вставь сюда данные своего проекта Supabase =====
+      // Никогда не вставляй сюда service_role key. Нужен только публичный anon/publishable key.
+      const SUPABASE_URL = "https://rgxlnzhjdpmhteioosem.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "sb_publishable_Mi4vpfS3SZaLx0R8MnKbVA_ogLdCOT3";
+      const ONLINE_TABLE = "leaderboard_scores";
+      const GAME_VERSION = "8.0";
+      const SHARE_GAME_URL = "https://vk.ru/app54887873";
+      const incomingParams = new URLSearchParams(window.location.search);
+      const challengeTarget = (() => {
+        const value = Number(incomingParams.get("challenge"));
+        return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+      })();
+      const challengeMode = ["easy", "normal", "hard"].includes(
+        incomingParams.get("challengeMode"),
+      )
+        ? incomingParams.get("challengeMode")
+        : "normal";
+      const ONLINE_SUBMIT_URL = `${SUPABASE_URL}/functions/v1/submit-score`;
+      const onlineConfigured = () =>
+        /^https:\/\/.+\.supabase\.co$/.test(SUPABASE_URL) &&
+        (SUPABASE_ANON_KEY.startsWith("eyJ") ||
+          SUPABASE_ANON_KEY.startsWith("sb_publishable_"));
+      let lastRunResult = null;
+      let onlineSubmitInFlight = false;
+
+      function showChallengeBanner() {
+        const banner = $("challengeBanner");
+        if (!banner || !challengeTarget) return;
+        $("difficulty").value = challengeMode;
+        banner.textContent = `⚔️ ТЕБЕ БРОСИЛИ ВЫЗОВ! Друг набрал ${challengeTarget} очков на сложности «${difficultyLabel(challengeMode)}». Набери больше за 30 секунд!`;
+        banner.classList.remove("hidden");
+      }
+
+      async function copyShareText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return true;
+          } catch (error) {
+            console.warn("Clipboard API failed; trying fallback:", error);
+          }
+        }
+        const field = document.createElement("textarea");
+        field.value = text;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.left = "-9999px";
+        field.style.top = "0";
+        document.body.appendChild(field);
+        field.focus();
+        field.select();
+        field.setSelectionRange(0, field.value.length);
+        let copied = false;
+        try {
+          copied = document.execCommand("copy");
+        } catch (error) {
+          copied = false;
+        }
+        field.remove();
+        return copied;
+      }
+
+      async function shareResult() {
+        if (!lastRunResult) return;
+        const url = new URL(SHARE_GAME_URL);
+        url.searchParams.set("challenge", String(lastRunResult.score));
+        url.searchParams.set("challengeMode", lastRunResult.mode);
+        const shareText = `Я набрал ${lastRunResult.score} очков в игре «РЕАКЦИЯ» на сложности «${difficultyLabel(lastRunResult.mode)}»! Сможешь побить мой результат?`;
+        const fullText = `${shareText} ${url.toString()}`;
+        const payload = {
+          title: "РЕАКЦИЯ — вызов принят?",
+          text: shareText,
+          url: url.toString(),
+        };
+        const status = $("shareStatus");
+        status.textContent = "Готовим ссылку-вызов...";
+        if (navigator.share) {
+          try {
+            await navigator.share(payload);
+            status.textContent =
+              "✅ Вызов отправлен! Друг получит ссылку на игру с твоим результатом.";
+            return;
+          } catch (error) {
+            if (error && error.name === "AbortError") {
+              status.textContent =
+                "Отправка отменена. Ссылку можно скопировать кнопкой «Поделиться» ещё раз.";
+              return;
+            }
+            console.warn("Native share failed; falling back to copy:", error);
+          }
+        }
+        const copied = await copyShareText(fullText);
+        status.textContent = copied
+          ? "✅ Ссылка-вызов скопирована! Отправь её другу — откроется игра с твоим результатом."
+          : `Не удалось скопировать автоматически. Скопируй эту ссылку вручную: ${url.toString()}`;
+      }
+
+      async function inviteFriend() {
+        const url = SHARE_GAME_URL;
+        const text =
+          "Заходи в РЕАКЦИЮ! Проверь скорость реакции и попробуй обойти мой результат.";
+        const status = $("inviteStatus");
+        status.textContent = "Готовим приглашение...";
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: "РЕАКЦИЯ — сыграем?", text, url });
+            status.textContent = "✅ Приглашение отправлено!";
+            return;
+          } catch (error) {
+            if (error && error.name === "AbortError") {
+              status.textContent =
+                "Отправка отменена. Можешь пригласить друга ещё раз.";
+              return;
+            }
+            console.warn(
+              "Native invite share failed; using copy fallback:",
+              error,
+            );
+          }
+        }
+        const copied = await copyShareText(`${text} ${url}`);
+        status.textContent = copied
+          ? "✅ Ссылка на игру скопирована. Отправь её другу!"
+          : `Скопируй ссылку вручную: ${url}`;
+      }
+
+      const escapeHTML = (value) =>
+        String(value).replace(
+          /[&<>"']/g,
+          (ch) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[ch],
+        );
+      const difficultyLabel = (mode) =>
+        mode === "easy" ? "Лёгкая" : mode === "hard" ? "Сложная" : "Нормальная";
+      function getSupabaseHeaders(extra = {}) {
+        const headers = {
+          apikey: SUPABASE_ANON_KEY,
+          "Content-Type": "application/json",
+          ...extra,
+        };
+        if (SUPABASE_ANON_KEY.startsWith("eyJ"))
+          headers.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
+        return headers;
+      }
+      async function loadOnlineLeaderboard() {
+        const container = $("onlineLeaderboardContent");
+        if (!onlineConfigured()) {
+          container.innerHTML =
+            '<div class="config-note">Онлайн-таблица пока не подключена. Проверь настройки проекта Supabase.</div>';
+          return;
+        }
+        container.innerHTML = '<p class="muted">Загружаем рейтинг...</p>';
+        try {
+          const mode = $("leaderboardMode").value;
+          const period = $("leaderboardPeriod")?.value || "week";
+          const limit = Number($("leaderboardLimit")?.value || 10);
+          const params = new URLSearchParams({
+            select: "nickname,score,difficulty,created_at",
+            difficulty: `eq.${mode}`,
+            order: "score.desc,created_at.asc",
+            limit: String([10, 100].includes(limit) ? limit : 10),
+          });
+          if (period === "today" || period === "week") {
+            const since = new Date();
+            if (period === "today") since.setHours(0, 0, 0, 0);
+            else since.setDate(since.getDate() - 7);
+            params.set("created_at", `gte.${since.toISOString()}`);
+          }
+          const url = `${SUPABASE_URL}/rest/v1/${ONLINE_TABLE}?${params.toString()}`;
+          const response = await fetch(url, { headers: getSupabaseHeaders() });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const rows = await response.json();
+          if (!rows.length) {
+            container.innerHTML =
+              '<p class="muted">В этом соревновании пока нет результатов. Стань первым!</p>';
+            return;
+          }
+          const periodLabel =
+            period === "today"
+              ? "сегодня"
+              : period === "week"
+                ? "за последние 7 дней"
+                : "за всё время";
+          container.innerHTML =
+            `<p class="muted">Показаны ${rows.length} лучших результатов · ${periodLabel}</p>` +
+            '<div class="online-table-wrap"><table class="leaderboard-table"><thead><tr><th>Место</th><th>Игрок</th><th>Очки</th></tr></thead><tbody>' +
+            rows
+              .map((r, i) => {
+                const nickname = escapeHTML(r.nickname || "Игрок");
+                const mine =
+                  localStorage.getItem("reactionNickname") ===
+                  (r.nickname || "");
+                return `<tr${mine ? ' class="highlight-row"' : ""}><td>${i + 1}</td><td>${nickname}${mine ? " · вы" : ""}</td><td>${Number(r.score) || 0}</td></tr>`;
+              })
+              .join("") +
+            "</tbody></table></div>";
+        } catch (error) {
+          container.innerHTML =
+            '<p class="online-status">Не удалось загрузить рейтинг. Проверь подключение и попробуй обновить таблицу.</p>';
+          console.error("Online leaderboard load failed:", error);
+        }
+      }
+      async function submitOnlineScore() {
+        const status = $("onlineSubmitStatus");
+        const button = $("submitOnlineScoreButton");
+        if (!lastRunResult) {
+          status.textContent = "Сначала сыграй раунд.";
+          return;
+        }
+        if (lastRunResult.score < 1) {
+          status.textContent =
+            "Нужно набрать хотя бы 1 очко, чтобы отправить результат.";
+          return;
+        }
+        if (onlineSubmitInFlight) return;
+        if (!onlineConfigured()) {
+          status.textContent =
+            "Сначала подключи Supabase: заполни URL и anon key в коде.";
+          return;
+        }
+        const nickname = $("playerNickname").value.trim().replace(/\s+/g, " ");
+        if (nickname.length < 2 || nickname.length > 16) {
+          status.textContent = "Имя должно содержать от 2 до 16 символов.";
+          return;
+        }
+        onlineSubmitInFlight = true;
+        button.disabled = true;
+        status.textContent = "Отправляем результат...";
+        try {
+          const response = await fetch(ONLINE_SUBMIT_URL, {
+            method: "POST",
+            headers: getSupabaseHeaders(),
+            body: JSON.stringify({
+              nickname,
+              score: lastRunResult.score,
+              difficulty: lastRunResult.mode,
+            }),
+          });
+          if (!response.ok) {
+            const detail = await response.text();
+            throw new Error(`HTTP ${response.status}: ${detail.slice(0, 180)}`);
+          }
+          localStorage.setItem("reactionNickname", nickname);
+          status.textContent = "✅ Результат опубликован в общей таблице!";
+          await loadOnlineLeaderboard();
+        } catch (error) {
+          status.textContent =
+            "Не удалось отправить результат. Попробуй ещё раз через несколько секунд.";
+          console.error("Online score submit failed:", error);
+        } finally {
+          onlineSubmitInFlight = false;
+          button.disabled = false;
+        }
+      }
+
+      const game = $("game");
+      const target = $("target");
+
+      let score = 0;
+      let time = 30;
+      let combo = 0;
+      let level = 1;
+      let playing = false;
+      let missesThisRun = 0;
+      let bonusTimeAwarded = 0;
+
+      let timer = null;
+      let moveTimer = null;
+      let audioContext = null;
+      let soundEnabled = localStorage.getItem("reactionSound") !== "false";
+      let musicEnabled = localStorage.getItem("reactionMusic") === "true";
+      let musicTimer = null;
+      let musicStep = 0;
+      let coins = Number(localStorage.getItem("reactionCoins")) || 0;
+
+      function closeModal(id) {
+        $(id).classList.add("hidden");
+      }
+      function showTutorial() {
+        $("tutorialModal").classList.remove("hidden");
+      }
+      function openSettings() {
+        $("soundToggle").checked = soundEnabled;
+        $("musicToggle").checked = musicEnabled;
+        $("settingsModal").classList.remove("hidden");
+      }
+      function setSoundEnabled(value) {
+        soundEnabled = Boolean(value);
+        localStorage.setItem("reactionSound", String(soundEnabled));
+        if (soundEnabled) playSound(700);
+      }
+      function setMusicEnabled(value) {
+        musicEnabled = Boolean(value);
+        localStorage.setItem("reactionMusic", String(musicEnabled));
+        if (musicEnabled) startMusic();
+        else stopMusic();
+      }
+      function startMusic() {
+        if (!musicEnabled || musicTimer) return;
+        try {
+          const AudioClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioClass) {
+            audioContext ??= new AudioClass();
+            if (audioContext.state === "suspended") audioContext.resume();
+          }
+        } catch (e) {
+          /* Music is optional. */
+        }
+        const notes = [
+          261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23,
+        ];
+        musicTimer = setInterval(() => {
+          if (!musicEnabled || document.hidden) return;
+          playMusicNote(notes[musicStep++ % notes.length]);
+        }, 420);
+      }
+      function stopMusic() {
+        clearInterval(musicTimer);
+        musicTimer = null;
+      }
+      function playMusicNote(frequency) {
+        if (!musicEnabled) return;
+        try {
+          const AudioClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioClass) return;
+          audioContext ??= new AudioClass();
+          if (audioContext.state === "suspended") audioContext.resume();
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.type = "triangle";
+          osc.frequency.value = frequency;
+          gain.gain.setValueAtTime(0.018, audioContext.currentTime);
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + 0.28,
+          );
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.start();
+          osc.stop(audioContext.currentTime + 0.28);
+        } catch (e) {
+          /* Audio is optional; game remains playable. */
+        }
+      }
+      function openLeaderboard() {
+        $("leaderboardModal").classList.remove("hidden");
+        renderLeaderboard();
+      }
+      function getLeaderboard() {
+        try {
+          const data = JSON.parse(
+            localStorage.getItem("reactionLeaderboard") || "{}",
+          );
+          return data && typeof data === "object" ? data : {};
+        } catch (e) {
+          return {};
+        }
+      }
+      function recordLeaderboard(mode, points) {
+        const board = getLeaderboard();
+        const list = Array.isArray(board[mode]) ? board[mode] : [];
+        list.push({
+          score: points,
+          date: new Date().toLocaleDateString("ru-RU"),
+        });
+        board[mode] = list.sort((a, b) => b.score - a.score).slice(0, 10);
+        localStorage.setItem("reactionLeaderboard", JSON.stringify(board));
+      }
+      function renderLeaderboard() {
+        const mode = $("leaderboardMode").value;
+        loadOnlineLeaderboard();
+        const list = getLeaderboard()[mode] || [];
+        if (!list.length) {
+          $("leaderboardContent").innerHTML =
+            "<p>Пока нет результатов. Сыграй первый раунд!</p>";
+          return;
+        }
+        $("leaderboardContent").innerHTML =
+          '<table class="leaderboard-table"><thead><tr><th>Место</th><th>Очки</th><th>Дата</th></tr></thead><tbody>' +
+          list
+            .map(
+              (r, i) =>
+                `<tr><td>${i + 1}</td><td>${Number(r.score) || 0}</td><td>${String(r.date || "")}</td></tr>`,
+            )
+            .join("") +
+          "</tbody></table>";
+      }
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) stopMusic();
+        else if (musicEnabled) startMusic();
+      });
+
+      let owned;
+      try {
+        owned = JSON.parse(localStorage.getItem("reactionSkins") || "[0]");
+      } catch (e) {
+        owned = [0];
+      }
+      if (!Array.isArray(owned)) owned = [0];
+      if (!owned.includes(0)) owned.unshift(0);
+
+      let selectedSkin = Number(localStorage.getItem("reactionSkin")) || 0;
+      if (
+        !Number.isInteger(selectedSkin) ||
+        selectedSkin < 0 ||
+        selectedSkin > 3
+      )
+        selectedSkin = 0;
+
+      const settings = {
+        easy: { size: 60, speed: 1700 },
+        normal: { size: 54, speed: 1300 },
+        hard: { size: 45, speed: 950 },
+      };
+
+      const skinData = [
+        { name: "Зелёный", color: "#38e8b5", price: 0 },
+        { name: "Розовый", color: "#ff4fd8", price: 20 },
+        { name: "Золотой", color: "#ffd76b", price: 40 },
+        { name: "Фиолетовый", color: "#a78bfa", price: 60 },
+      ];
+
+      // ===== REACTION 5.0: постоянный прогресс =====
+      const localDayKey = () => {
+        const d = new Date();
+        return [
+          d.getFullYear(),
+          String(d.getMonth() + 1).padStart(2, "0"),
+          String(d.getDate()).padStart(2, "0"),
+        ].join("-");
+      };
+      const readNumber = (key) =>
+        Math.max(0, Number(localStorage.getItem(key)) || 0);
+      let playerXP = readNumber("reaction5XP");
+      let totalHits = readNumber("reaction5Hits");
+      let totalGames = readNumber("reaction5Games");
+      let bestCombo = readNumber("reaction5BestCombo");
+      let runBestCombo = 0;
+      let finishedThisRun = false;
+      let daily;
+      try {
+        daily = JSON.parse(localStorage.getItem("reaction5Daily") || "null");
+      } catch (e) {
+        daily = null;
+      }
+      if (!daily || daily.day !== localDayKey()) {
+        daily = {
+          day: localDayKey(),
+          scoreDone: false,
+          comboDone: false,
+          scoreProgress: 0,
+          comboProgress: 0,
+        };
+      }
+      let achievements;
+      try {
+        achievements = JSON.parse(
+          localStorage.getItem("reaction5Achievements") || "{}",
+        );
+      } catch (e) {
+        achievements = {};
+      }
+      if (
+        !achievements ||
+        typeof achievements !== "object" ||
+        Array.isArray(achievements)
+      )
+        achievements = {};
+      const achievementDefs = [
+        {
+          id: "firstHit",
+          title: "Первый шаг",
+          desc: "Сделать первое попадание",
+          reward: 10,
+          test: () => totalHits >= 1,
+        },
+        {
+          id: "score30",
+          title: "Меткий игрок",
+          desc: "Набрать 30 очков за одну игру",
+          reward: 20,
+          test: () => score >= 30,
+        },
+        {
+          id: "combo5",
+          title: "Комбо-мастер",
+          desc: "Сделать серию из 5 попаданий",
+          reward: 25,
+          test: () => runBestCombo >= 5,
+        },
+        {
+          id: "hits100",
+          title: "Снайпер",
+          desc: "Сделать 100 попаданий всего",
+          reward: 30,
+          test: () => totalHits >= 100,
+        },
+        {
+          id: "games10",
+          title: "Постоянный игрок",
+          desc: "Сыграть 10 завершённых игр",
+          reward: 40,
+          test: () => totalGames >= 10,
+        },
+      ];
+      function saveV5() {
+        localStorage.setItem("reaction5XP", playerXP);
+        localStorage.setItem("reaction5Hits", totalHits);
+        localStorage.setItem("reaction5Games", totalGames);
+        localStorage.setItem("reaction5BestCombo", bestCombo);
+        localStorage.setItem("reaction5Daily", JSON.stringify(daily));
+        localStorage.setItem(
+          "reaction5Achievements",
+          JSON.stringify(achievements),
+        );
+      }
+      function renderProfile() {
+        const levelNow = Math.floor(playerXP / 100) + 1;
+        const intoLevel = playerXP % 100;
+        $("playerLevel").textContent = `Уровень ${levelNow}`;
+        $("xpText").textContent = `${intoLevel} / 100 XP`;
+        $("xpFill").style.width = `${intoLevel}%`;
+        $("lifetimeStats").textContent =
+          `Попаданий: ${totalHits} · Игр: ${totalGames}`;
+      }
+      function addPlayerXP(amount) {
+        const before = Math.floor(playerXP / 100) + 1;
+        playerXP += amount;
+        const after = Math.floor(playerXP / 100) + 1;
+        if (after > before) {
+          $("message").textContent = `🎉 Новый уровень профиля: ${after}!`;
+          playSound(900);
+        }
+        renderProfile();
+        saveV5();
+      }
+      function renderDaily() {
+        $("dailyTasks").innerHTML = `
+          <div class="quest-line">${daily.scoreDone ? "✅" : "🎯"} Набери 30 очков за одну игру — ${Math.min(30, daily.scoreProgress)}/30 ${daily.scoreDone ? "· +15 🪙" : ""}</div>
+          <div class="quest-line">${daily.comboDone ? "✅" : "🔥"} Сделай комбо ×5 — ${Math.min(5, daily.comboProgress)}/5 ${daily.comboDone ? "· +15 🪙" : ""}</div>`;
+      }
+      function updateDailyProgress() {
+        daily.scoreProgress = Math.max(daily.scoreProgress, score);
+        daily.comboProgress = Math.max(daily.comboProgress, runBestCombo);
+        let reward = 0;
+        if (score >= 30 && !daily.scoreDone) {
+          daily.scoreDone = true;
+          reward += 15;
+        }
+        if (runBestCombo >= 5 && !daily.comboDone) {
+          daily.comboDone = true;
+          reward += 15;
+        }
+        if (reward) {
+          coins += reward;
+          saveData();
+          $("message").textContent = `🎯 Задание выполнено! +${reward} монет`;
+        }
+        renderDaily();
+        saveV5();
+      }
+      function renderAchievements() {
+        $("achievements").innerHTML = achievementDefs
+          .map(
+            (a) =>
+              `<div class="achievement-line">${achievements[a.id] ? "🏆" : "🔒"} <strong>${a.title}</strong><br><small>${a.desc} · ${a.reward} 🪙</small></div>`,
+          )
+          .join("");
+      }
+      function checkAchievements() {
+        let unlockedAny = false;
+        achievementDefs.forEach((a) => {
+          if (!achievements[a.id] && a.test()) {
+            achievements[a.id] = true;
+            coins += a.reward;
+            unlockedAny = true;
+            $("message").textContent =
+              `🏆 Достижение «${a.title}»! +${a.reward} монет`;
+            playSound(1050);
+          }
+        });
+        if (unlockedAny) {
+          saveData();
+          saveV5();
+          showMenu();
+        }
+        renderAchievements();
+      }
+      function claimDailyReward() {
+        const key = localDayKey();
+        if (localStorage.getItem("reaction5LastClaim") !== key) {
+          coins += 25;
+          localStorage.setItem("reaction5LastClaim", key);
+          saveData();
+          $("dailyReward").textContent = "🎉 +25 монет! Возвращайся завтра.";
+        } else {
+          $("dailyReward").textContent =
+            "✅ Сегодня уже получено. Новая награда завтра.";
+        }
+      }
+      function showHitEffect(x, y, text) {
+        const el = document.createElement("span");
+        el.className = "hit-float";
+        el.textContent = text;
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        game.appendChild(el);
+        setTimeout(() => el.remove(), 700);
+      }
+      function initV5() {
+        claimDailyReward();
+        renderProfile();
+        renderDaily();
+        renderAchievements();
+      }
+
+      function saveData() {
+        localStorage.setItem("reactionCoins", coins);
+        localStorage.setItem("reactionSkins", JSON.stringify(owned));
+        localStorage.setItem("reactionSkin", selectedSkin);
+      }
+
+      function getRecord() {
+        return (
+          Number(localStorage.getItem("record_" + $("difficulty").value)) || 0
+        );
+      }
+
+      function showMenu() {
+        $("menuCoins").textContent = "🪙 Монеты: " + coins;
+        $("menuRecord").textContent = "🏆 Рекорд: " + getRecord();
+      }
+
+      function showScreen(name) {
+        $("menu").classList.toggle("hidden", name !== "menu");
+        $("gameScreen").classList.toggle("hidden", name !== "game");
+        $("shop").classList.toggle("hidden", name !== "shop");
+      }
+
+      function playSound(frequency = 600) {
+        if (!soundEnabled) return;
+        try {
+          const AudioClass = window.AudioContext || window.webkitAudioContext;
+
+          if (!AudioClass) return;
+
+          audioContext ??= new AudioClass();
+
+          if (audioContext.state === "suspended") {
+            audioContext.resume();
+          }
+
+          const oscillator = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+
+          oscillator.frequency.value = frequency;
+          oscillator.type = "sine";
+
+          gain.gain.setValueAtTime(0.12, audioContext.currentTime);
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + 0.12,
+          );
+
+          oscillator.connect(gain);
+          gain.connect(audioContext.destination);
+
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + 0.12);
+        } catch (error) {
+          console.log("Звук недоступен", error);
+        }
+      }
+
+      function updateSkin() {
+        const skin = skinData[selectedSkin] || skinData[0];
+
+        target.style.background = `radial-gradient(circle, white, ${skin.color} 45%, #17283b)`;
+
+        target.style.boxShadow = `0 0 15px ${skin.color}, 0 0 30px ${skin.color}`;
+      }
+
+      function getLevel() {
+        if (score >= 70) return 5;
+        if (score >= 45) return 4;
+        if (score >= 25) return 3;
+        if (score >= 10) return 2;
+        return 1;
+      }
+
+      function moveTarget() {
+        const minTargetSize = window.matchMedia("(max-width: 600px)").matches
+          ? 48
+          : 25;
+        const size = Math.max(
+          minTargetSize,
+          settings[$("difficulty").value].size - (level - 1) * 5,
+        );
+
+        target.style.width = size + "px";
+        target.style.height = size + "px";
+
+        const maxX = game.clientWidth - size;
+        const maxY = game.clientHeight - size;
+
+        target.style.left = Math.random() * maxX + "px";
+        target.style.top = Math.random() * maxY + "px";
+      }
+
+      function setMoveSpeed() {
+        clearInterval(moveTimer);
+
+        const base = settings[$("difficulty").value].speed;
+        const speed = Math.max(450, base - (level - 1) * 180);
+
+        moveTimer = setInterval(() => {
+          if (playing) moveTarget();
+        }, speed);
+      }
+
+      function updateDisplay() {
+        $("score").textContent = score;
+        $("time").textContent = time;
+        $("level").textContent = level;
+
+        const multiplier = Math.min(5, 1 + Math.floor(combo / 3));
+        $("combo").textContent = "x" + multiplier;
+      }
+
+      function startGame() {
+        clearInterval(timer);
+        clearInterval(moveTimer);
+
+        score = 0;
+        time = 30;
+        combo = 0;
+        level = 1;
+        runBestCombo = 0;
+        missesThisRun = 0;
+        bonusTimeAwarded = 0;
+        finishedThisRun = false;
+        playing = true;
+
+        updateDisplay();
+        $("resultPanel").classList.add("hidden");
+        $("leaveGameButton").classList.remove("hidden");
+        showScreen("game");
+        if (musicEnabled) startMusic();
+        updateSkin();
+
+        $("message").textContent = challengeTarget
+          ? `Побей результат друга: ${challengeTarget} очков!`
+          : "Лови мишень!";
+        $("target").style.display = "block";
+
+        moveTarget();
+        setMoveSpeed();
+        playSound(500);
+
+        timer = setInterval(() => {
+          time--;
+          $("time").textContent = time;
+
+          if (time <= 0) endGame();
+        }, 1000);
+      }
+
+      function endGame() {
+        if (!playing) return;
+        clearInterval(timer);
+        clearInterval(moveTimer);
+        playing = false;
+        target.style.display = "none";
+        stopMusic();
+
+        if (!finishedThisRun) {
+          finishedThisRun = true;
+          totalGames++;
+          saveV5();
+          checkAchievements();
+          renderProfile();
+        }
+        updateDailyProgress();
+
+        const mode = $("difficulty").value;
+        lastRunResult = { score, mode };
+        $("onlineSubmitStatus").textContent = onlineConfigured()
+          ? "Отправь результат, чтобы попасть в общую таблицу."
+          : "Онлайн-таблица пока не настроена.";
+        const oldRecord = Number(localStorage.getItem("record_" + mode)) || 0;
+        const isNewRecord = score > oldRecord;
+        if (isNewRecord) localStorage.setItem("record_" + mode, score);
+        recordLeaderboard(mode, score);
+        saveData();
+        showMenu();
+
+        const beatChallenge = challengeTarget > 0 && score > challengeTarget;
+        $("resultTitle").textContent = beatChallenge
+          ? "⚔️ ВЫЗОВ ВЫИГРАН!"
+          : isNewRecord
+            ? "🏆 НОВЫЙ РЕКОРД!"
+            : challengeTarget > 0
+              ? "🏁 ПОПРОБУЙ ЕЩЁ РАЗ!"
+              : "🏁 Раунд завершён!";
+        $("finalScore").textContent = score;
+        const runAttempts = totalHits + missesThisRun;
+        const accuracy = runAttempts
+          ? Math.round((totalHits / runAttempts) * 100)
+          : 0;
+        $("resultDetails").textContent =
+          `Сложность: ${mode === "easy" ? "Лёгкая" : mode === "hard" ? "Сложная" : "Нормальная"} · Лучшее комбо: ×${runBestCombo} · Точность: ${accuracy}% · Промахи: ${missesThisRun} · Бонус времени: +${bonusTimeAwarded} сек.` +
+          (challengeTarget > 0
+            ? ` · Вызов друга: ${score > challengeTarget ? "победа!" : `нужно больше ${challengeTarget}`}`
+            : "");
+        $("shareStatus").textContent = "";
+        $("resultPanel").classList.remove("hidden");
+        $("leaveGameButton").classList.add("hidden");
+        $("message").textContent = isNewRecord
+          ? "Поздравляем с новым рекордом!"
+          : "Отличная попытка! Попробуй улучшить результат.";
+        playSound(isNewRecord ? 950 : 350);
+
+        // После раунда прокручиваем страницу к нижним кнопкам результата.
+        requestAnimationFrame(() => {
+          const scrollRoot = document.scrollingElement || document.documentElement;
+          scrollRoot.scrollTo({
+            top: scrollRoot.scrollHeight,
+            behavior: "smooth",
+          });
+        });
+      }
+
+      function registerHit(event) {
+        if (event) event.stopPropagation();
+        if (!playing) return;
+
+        combo++;
+        runBestCombo = Math.max(runBestCombo, combo);
+        let earnedTimeBonus = 0;
+        if (combo > 0 && combo % 10 === 0 && time < 45) {
+          earnedTimeBonus = Math.min(2, 45 - time);
+          time += earnedTimeBonus;
+          bonusTimeAwarded += earnedTimeBonus;
+          $("time").textContent = time;
+        }
+        totalHits++;
+        bestCombo = Math.max(bestCombo, combo);
+
+        const multiplier = Math.min(5, 1 + Math.floor(combo / 3));
+
+        score += multiplier;
+        coins += multiplier;
+
+        const oldLevel = level;
+        level = getLevel();
+
+        saveData();
+        addPlayerXP(5);
+        updateDailyProgress();
+        checkAchievements();
+        saveV5();
+        updateDisplay();
+        const hitX = parseFloat(target.style.left) || 0;
+        const hitY = parseFloat(target.style.top) || 0;
+        showHitEffect(hitX + 12, hitY + 8, `+${multiplier} · +5 XP`);
+        moveTarget();
+        playSound(650 + multiplier * 100);
+
+        if (level > oldLevel) {
+          $("message").textContent = "🔥 НОВЫЙ УРОВЕНЬ: " + level;
+          setMoveSpeed();
+        } else if (earnedTimeBonus > 0) {
+          $("message").textContent =
+            `🔥 СЕРИЯ ×${combo}! +${earnedTimeBonus} сек.`;
+        } else {
+          $("message").textContent = "🔥 Комбо x" + multiplier;
+        }
+      }
+      target.addEventListener("click", registerHit);
+      target.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          registerHit(event);
+        }
+      });
+
+      game.addEventListener("click", () => {
+        if (!playing) return;
+
+        missesThisRun++;
+        combo = 0;
+        updateDisplay();
+        $("message").textContent = "Промах! Комбо сброшено. Будь точнее!";
+        playSound(220);
+      });
+
+      function openShop() {
+        showScreen("shop");
+        renderShop();
+      }
+
+      function renderShop() {
+        $("shopCoins").textContent = "🪙 Монеты: " + coins;
+        $("skins").innerHTML = "";
+
+        skinData.forEach((skin, index) => {
+          const button = document.createElement("button");
+          button.className = "secondary";
+          button.style.border = "2px solid " + skin.color;
+
+          if (owned.includes(index)) {
+            button.textContent =
+              (selectedSkin === index ? "✓ " : "") + skin.name + " — выбрать";
+          } else {
+            button.textContent = skin.name + " — " + skin.price + " монет";
+          }
+
+          button.onclick = () => buySkin(index);
+          $("skins").appendChild(button);
+        });
+      }
+
+      function buySkin(index) {
+        const skin = skinData[index];
+
+        if (owned.includes(index)) {
+          selectedSkin = index;
+          saveData();
+          updateSkin();
+
+          $("skinMessage").textContent = "Выбран скин: " + skin.name;
+
+          renderShop();
+          return;
+        }
+
+        if (coins < skin.price) {
+          $("skinMessage").textContent =
+            "Не хватает " + (skin.price - coins) + " монет.";
+          return;
+        }
+
+        coins -= skin.price;
+        owned.push(index);
+        selectedSkin = index;
+
+        saveData();
+        renderShop();
+        updateSkin();
+
+        $("skinMessage").textContent = "🎉 Куплен новый скин: " + skin.name;
+      }
+
+      function goMenu() {
+        clearInterval(timer);
+        stopMusic();
+        clearInterval(moveTimer);
+
+        playing = false;
+        target.style.display = "none";
+
+        showScreen("menu");
+        showMenu();
+      }
+
+      showMenu();
+      showChallengeBanner();
+      try {
+        $("playerNickname").value =
+          localStorage.getItem("reactionNickname") || "";
+      } catch (e) {
+        $("playerNickname").value = "";
+      }
+      initV5();
+      ["tutorialModal", "settingsModal", "leaderboardModal"].forEach((id) => {
+        $(id).addEventListener("click", (event) => {
+          if (event.target === $(id)) closeModal(id);
+        });
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape")
+          ["tutorialModal", "settingsModal", "leaderboardModal"].forEach(
+            closeModal,
+          );
+      });
+      if (!localStorage.getItem("reactionTutorialSeen")) {
+        showTutorial();
+        localStorage.setItem("reactionTutorialSeen", "true");
+      }
+      if (musicEnabled) {
+        document.addEventListener(
+          "pointerdown",
+          function unlockMusic() {
+            startMusic();
+            document.removeEventListener("pointerdown", unlockMusic);
+          },
+          { once: true },
+        );
+      }
+    </script>
+    <!-- VK Bridge: инициализация приложения ВКонтакте -->
+    <script
+      async
+      src="https://unpkg.com/@vkontakte/vk-bridge@2.14.2/dist/browser.min.js"
+      onload="
+        if (window.vkBridge && window.vkBridge.send) {
+          window.vkBridge.send('VKWebAppInit').then(function () {
+            var isMobileVK = /vk_platform=(mobile_web|mobile_android|mobile_iphone)/.test(window.location.search);
+            if (!isMobileVK) {
+              var lastHeight = 0;
+              var resizeTimer = null;
+              function resizeVkWindow() {
+                /* Не растягиваем окно VK под всю страницу: прокрутка остаётся внутри игры. */
+                var pageHeight = Math.min(
+                  Math.max(window.innerHeight || 740, 600),
+                  900
+                );
+                if (Math.abs(pageHeight - lastHeight) < 4) return;
+                lastHeight = pageHeight;
+                window.vkBridge.send('VKWebAppResizeWindow', {
+                  width: Math.min(Math.max(window.innerWidth || 911, 320), 1000),
+                  height: pageHeight
+                }).catch(function () {});
+              }
+              function scheduleVkResize() {
+                if (resizeTimer) clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(resizeVkWindow, 100);
+              }
+              resizeVkWindow();
+              if (window.ResizeObserver) {
+                var vkResizeObserver = new ResizeObserver(scheduleVkResize);
+                vkResizeObserver.observe(document.body);
+                vkResizeObserver.observe(document.documentElement);
+              }
+              window.addEventListener('resize', scheduleVkResize);
+              window.addEventListener('load', scheduleVkResize);
+              setTimeout(scheduleVkResize, 350);
+              setTimeout(scheduleVkResize, 1000);
+            }
+          }).catch(function () {});
+        }
+      "
+    ></script>
+  </body>
+</html>
