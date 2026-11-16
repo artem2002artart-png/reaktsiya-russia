@@ -44,9 +44,22 @@ The lowest-cost temporary design is to make the Russian build local-only: retain
 
 If a shared leaderboard is a must-have for the Russian release, a separately hosted backend in Russia needs to be selected and priced first. Do not assume a free trial or promotional credit is a permanent zero-cost service. The backend would need a database and a small server/API endpoint for safe score submission and rate limiting.
 
-## Next implementation step
+## Implementation completed in this repository
 
-Before changing game behavior, confirm whether the Russian release may temporarily use a local-only leaderboard (zero new hosting cost), or whether a shared online leaderboard is mandatory even if it requires a paid Russian-hosted service.
+The Russian build's `index.html` was updated on 2026-11-16:
+
+- Removed the Supabase URL and publishable key from the frontend.
+- Removed online leaderboard reads and score submission code.
+- Removed the online leaderboard UI and nickname submission form.
+- Kept local leaderboard, personal records, coins, achievements, settings, and progress.
+- Verified the updated file contains no Supabase references and no `fetch()` calls.
+- The only remaining external script URL found in the HTML is the VK Bridge library loaded from unpkg.com. This is an external dependency and its CDN may receive ordinary connection metadata such as an IP address. This must be accounted for in the privacy notice / platform review; local-only game scores do not mean the entire app makes no network requests.
+
+The update does not delete or alter the existing German Supabase project or its historic data. The Russian build simply no longer calls it.
+
+## Remaining compliance work
+
+This code change reduces data transfer from the game to the developer's leaderboard backend, but it is not a legal certification. Before release, review VK platform SDK/data flows, the CDN dependency, privacy notice, user-facing terms, contact details, and any applicable operator notification/consent requirements with current Russian legal guidance. Do not state that all data is stored in Russia or that no personal data is processed unless independently verified.
 
 ## Important
 
