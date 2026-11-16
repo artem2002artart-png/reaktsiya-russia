@@ -787,22 +787,8 @@
         <div class="result-score" id="finalScore">0</div>
         <p id="resultDetails" style="text-align: center"></p>
         <div class="online-form">
-          <label for="playerNickname">Имя для онлайн-таблицы</label>
-          <input
-            id="playerNickname"
-            maxlength="16"
-            autocomplete="nickname"
-            placeholder="Например, SpeedFox"
-          />
-          <button
-            class="secondary"
-            id="submitOnlineScoreButton"
-            onclick="submitOnlineScore()"
-          >
-            ☁️ ОТПРАВИТЬ РЕЗУЛЬТАТ ОНЛАЙН
-          </button>
-          <div id="onlineSubmitStatus" class="online-status" aria-live="polite">
-            Можно отправить результат в общую таблицу рекордов.
+          <div class="online-status" aria-live="polite">
+            🏆 Результат сохранён в личной таблице на этом устройстве.
           </div>
         </div>
         <button
@@ -907,37 +893,8 @@
               <option value="hard">Сложная</option>
             </select>
           </label>
-          <label for="leaderboardPeriod"
-            >Соревнование
-            <select id="leaderboardPeriod" onchange="loadOnlineLeaderboard()">
-              <option value="all">За всё время</option>
-              <option value="week" selected>За 7 дней</option>
-              <option value="today">Сегодня</option>
-            </select>
-          </label>
-          <label for="leaderboardLimit"
-            >Показать игроков
-            <select id="leaderboardLimit" onchange="loadOnlineLeaderboard()">
-              <option value="10" selected>Топ-10</option>
-              <option value="100">Топ-100</option>
-            </select>
-          </label>
-        </div>
-        <div class="competition-note">
-          ⚡ Соревнуйся с игроками на своей сложности. Недельный рейтинг
-          обновляется автоматически, а общий рейтинг хранит лучшие результаты за
-          всё время.
         </div>
         <div id="leaderboardContent"></div>
-        <hr style="border: 0; border-top: 1px solid #31536b; margin: 18px 0" />
-        <h3 style="color: #38e8b5">🌍 Общая онлайн-таблица</h3>
-        <div id="onlineLeaderboardContent">
-          <p class="muted">Загрузка онлайн-таблицы...</p>
-        </div>
-        <p class="muted">
-          Онлайн-рейтинг виден всем игрокам. Можно переключать общий, недельный
-          и дневной зачёт. Личная таблица хранится только на этом устройстве.
-        </p>
         <button onclick="closeModal('leaderboardModal')">ЗАКРЫТЬ</button>
       </div>
     </div>
@@ -999,13 +956,9 @@
       // Все обращения игры к localStorage будут идти через безопасную оболочку
       const localStorage = safeStorage;
 
-      // ===== ГЛОБАЛЬНАЯ ТАБЛИЦА: вставь сюда данные своего проекта Supabase =====
-      // Никогда не вставляй сюда service_role key. Нужен только публичный anon/publishable key.
-      const SUPABASE_URL = "https://rgxlnzhjdpmhteioosem.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "sb_publishable_Mi4vpfS3SZaLx0R8MnKbVA_ogLdCOT3";
-      const ONLINE_TABLE = "leaderboard_scores";
-      const GAME_VERSION = "8.0";
+      // Российская сборка: онлайн-передача результатов отключена.
+      // Личные рекорды и прогресс хранятся локально на устройстве игрока.
+      const GAME_VERSION = "8.0";      const GAME_VERSION = "8.0";
       const SHARE_GAME_URL = "https://vk.ru/app54887873";
       const incomingParams = new URLSearchParams(window.location.search);
       const challengeTarget = (() => {
@@ -1017,13 +970,7 @@
       )
         ? incomingParams.get("challengeMode")
         : "normal";
-      const ONLINE_SUBMIT_URL = `${SUPABASE_URL}/functions/v1/submit-score`;
-      const onlineConfigured = () =>
-        /^https:\/\/.+\.supabase\.co$/.test(SUPABASE_URL) &&
-        (SUPABASE_ANON_KEY.startsWith("eyJ") ||
-          SUPABASE_ANON_KEY.startsWith("sb_publishable_"));
       let lastRunResult = null;
-      let onlineSubmitInFlight = false;
 
       function showChallengeBanner() {
         const banner = $("challengeBanner");
@@ -1140,126 +1087,8 @@
         );
       const difficultyLabel = (mode) =>
         mode === "easy" ? "Лёгкая" : mode === "hard" ? "Сложная" : "Нормальная";
-      function getSupabaseHeaders(extra = {}) {
-        const headers = {
-          apikey: SUPABASE_ANON_KEY,
-          "Content-Type": "application/json",
-          ...extra,
-        };
-        if (SUPABASE_ANON_KEY.startsWith("eyJ"))
-          headers.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
-        return headers;
-      }
-      async function loadOnlineLeaderboard() {
-        const container = $("onlineLeaderboardContent");
-        if (!onlineConfigured()) {
-          container.innerHTML =
-            '<div class="config-note">Онлайн-таблица пока не подключена. Проверь настройки проекта Supabase.</div>';
-          return;
-        }
-        container.innerHTML = '<p class="muted">Загружаем рейтинг...</p>';
-        try {
-          const mode = $("leaderboardMode").value;
-          const period = $("leaderboardPeriod")?.value || "week";
-          const limit = Number($("leaderboardLimit")?.value || 10);
-          const params = new URLSearchParams({
-            select: "nickname,score,difficulty,created_at",
-            difficulty: `eq.${mode}`,
-            order: "score.desc,created_at.asc",
-            limit: String([10, 100].includes(limit) ? limit : 10),
-          });
-          if (period === "today" || period === "week") {
-            const since = new Date();
-            if (period === "today") since.setHours(0, 0, 0, 0);
-            else since.setDate(since.getDate() - 7);
-            params.set("created_at", `gte.${since.toISOString()}`);
-          }
-          const url = `${SUPABASE_URL}/rest/v1/${ONLINE_TABLE}?${params.toString()}`;
-          const response = await fetch(url, { headers: getSupabaseHeaders() });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const rows = await response.json();
-          if (!rows.length) {
-            container.innerHTML =
-              '<p class="muted">В этом соревновании пока нет результатов. Стань первым!</p>';
-            return;
-          }
-          const periodLabel =
-            period === "today"
-              ? "сегодня"
-              : period === "week"
-                ? "за последние 7 дней"
-                : "за всё время";
-          container.innerHTML =
-            `<p class="muted">Показаны ${rows.length} лучших результатов · ${periodLabel}</p>` +
-            '<div class="online-table-wrap"><table class="leaderboard-table"><thead><tr><th>Место</th><th>Игрок</th><th>Очки</th></tr></thead><tbody>' +
-            rows
-              .map((r, i) => {
-                const nickname = escapeHTML(r.nickname || "Игрок");
-                const mine =
-                  localStorage.getItem("reactionNickname") ===
-                  (r.nickname || "");
-                return `<tr${mine ? ' class="highlight-row"' : ""}><td>${i + 1}</td><td>${nickname}${mine ? " · вы" : ""}</td><td>${Number(r.score) || 0}</td></tr>`;
-              })
-              .join("") +
-            "</tbody></table></div>";
-        } catch (error) {
-          container.innerHTML =
-            '<p class="online-status">Не удалось загрузить рейтинг. Проверь подключение и попробуй обновить таблицу.</p>';
-          console.error("Online leaderboard load failed:", error);
-        }
-      }
-      async function submitOnlineScore() {
-        const status = $("onlineSubmitStatus");
-        const button = $("submitOnlineScoreButton");
-        if (!lastRunResult) {
-          status.textContent = "Сначала сыграй раунд.";
-          return;
-        }
-        if (lastRunResult.score < 1) {
-          status.textContent =
-            "Нужно набрать хотя бы 1 очко, чтобы отправить результат.";
-          return;
-        }
-        if (onlineSubmitInFlight) return;
-        if (!onlineConfigured()) {
-          status.textContent =
-            "Сначала подключи Supabase: заполни URL и anon key в коде.";
-          return;
-        }
-        const nickname = $("playerNickname").value.trim().replace(/\s+/g, " ");
-        if (nickname.length < 2 || nickname.length > 16) {
-          status.textContent = "Имя должно содержать от 2 до 16 символов.";
-          return;
-        }
-        onlineSubmitInFlight = true;
-        button.disabled = true;
-        status.textContent = "Отправляем результат...";
-        try {
-          const response = await fetch(ONLINE_SUBMIT_URL, {
-            method: "POST",
-            headers: getSupabaseHeaders(),
-            body: JSON.stringify({
-              nickname,
-              score: lastRunResult.score,
-              difficulty: lastRunResult.mode,
-            }),
-          });
-          if (!response.ok) {
-            const detail = await response.text();
-            throw new Error(`HTTP ${response.status}: ${detail.slice(0, 180)}`);
-          }
-          localStorage.setItem("reactionNickname", nickname);
-          status.textContent = "✅ Результат опубликован в общей таблице!";
-          await loadOnlineLeaderboard();
-        } catch (error) {
-          status.textContent =
-            "Не удалось отправить результат. Попробуй ещё раз через несколько секунд.";
-          console.error("Online score submit failed:", error);
-        } finally {
-          onlineSubmitInFlight = false;
-          button.disabled = false;
-        }
-      }
+      // Онлайн-рейтинг отключён в российской сборке.
+      // Результаты сохраняются только в локальном хранилище игры.
 
       const game = $("game");
       const target = $("target");
@@ -1376,7 +1205,6 @@
       }
       function renderLeaderboard() {
         const mode = $("leaderboardMode").value;
-        loadOnlineLeaderboard();
         const list = getLeaderboard()[mode] || [];
         if (!list.length) {
           $("leaderboardContent").innerHTML =
@@ -1792,9 +1620,6 @@
 
         const mode = $("difficulty").value;
         lastRunResult = { score, mode };
-        $("onlineSubmitStatus").textContent = onlineConfigured()
-          ? "Отправь результат, чтобы попасть в общую таблицу."
-          : "Онлайн-таблица пока не настроена.";
         const oldRecord = Number(localStorage.getItem("record_" + mode)) || 0;
         const isNewRecord = score > oldRecord;
         if (isNewRecord) localStorage.setItem("record_" + mode, score);
@@ -1973,12 +1798,6 @@
 
       showMenu();
       showChallengeBanner();
-      try {
-        $("playerNickname").value =
-          localStorage.getItem("reactionNickname") || "";
-      } catch (e) {
-        $("playerNickname").value = "";
-      }
       initV5();
       ["tutorialModal", "settingsModal", "leaderboardModal"].forEach((id) => {
         $(id).addEventListener("click", (event) => {
