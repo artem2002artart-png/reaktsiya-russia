@@ -869,8 +869,9 @@
             onchange="setMusicEnabled(this.checked)"
         /></label>
         <p class="muted">
-          Музыка и звуки создаются браузером. Для воспроизведения сначала
-          коснись кнопки на странице.
+          Фоновая музыка включена автоматически. Если браузер блокирует
+          автозапуск, она начнёт играть после первого нажатия на экран.
+          Выключить музыку можно здесь.
         </p>
         <button onclick="closeModal('settingsModal')">ГОТОВО</button>
       </div>
@@ -1105,7 +1106,7 @@
       let moveTimer = null;
       let audioContext = null;
       let soundEnabled = localStorage.getItem("reactionSound") !== "false";
-      let musicEnabled = localStorage.getItem("reactionMusic") === "true";
+      let musicEnabled = localStorage.getItem("reactionMusic") !== "false";
       let musicTimer = null;
       let musicStep = 0;
       let coins = Number(localStorage.getItem("reactionCoins")) || 0;
@@ -1815,14 +1816,23 @@
         localStorage.setItem("reactionTutorialSeen", "true");
       }
       if (musicEnabled) {
-        document.addEventListener(
-          "pointerdown",
-          function unlockMusic() {
-            startMusic();
-            document.removeEventListener("pointerdown", unlockMusic);
-          },
-          { once: true },
-        );
+        // Пытаемся запустить музыку сразу при открытии игры.
+        // Если браузер блокирует автозапуск, разблокируем AudioContext
+        // при первом действии пользователя.
+        startMusic();
+        const unlockMusic = () => {
+          try {
+            if (audioContext && audioContext.state === "suspended") {
+              audioContext.resume();
+            } else if (!audioContext) {
+              startMusic();
+            }
+          } catch (error) {
+            console.log("Не удалось включить фоновую музыку", error);
+          }
+        };
+        document.addEventListener("pointerdown", unlockMusic, { once: true });
+        document.addEventListener("keydown", unlockMusic, { once: true });
       }
     </script>
     <!-- VK Bridge: инициализация приложения ВКонтакте -->
