@@ -19,6 +19,9 @@
       content="30 секунд на реакцию. Побей рекорд друга и попади в таблицу лидеров!"
     />
 
+    <!-- Yandex Games SDK. For games uploaded as an archive, use the relative path. -->
+    <script src="/sdk.js"></script>
+
     <style>
       * {
         box-sizing: border-box;
@@ -978,6 +981,63 @@
 
     <script>
       const $ = (id) => document.getElementById(id);
+
+      // Yandex Games SDK: initialization, language detection and platform events.
+      let ysdk = null;
+      let yandexGameplayActive = false;
+      let platformPaused = false;
+      const yandexSdkPromise = (async () => {
+        if (!window.YaGames || typeof window.YaGames.init !== "function") {
+          console.info("Yandex Games SDK is unavailable; running in browser mode.");
+          return null;
+        }
+        try {
+          const sdk = await window.YaGames.init();
+          ysdk = sdk;
+          window.ysdk = sdk;
+
+          // This build currently contains Russian text only; unsupported portal
+          // languages fall back to Russian, while the portal language is detected
+          // at startup as required by Yandex Games.
+          const portalLanguage = String(
+            sdk.environment?.i18n?.lang || "ru",
+          ).toLowerCase();
+          const supportedLanguages = ["ru"];
+          const activeLanguage = supportedLanguages.includes(portalLanguage)
+            ? portalLanguage
+            : "ru";
+          document.documentElement.lang = activeLanguage;
+          window.REACTION_PORTAL_LANGUAGE = portalLanguage;
+
+          sdk.on?.("game_api_pause", () => {
+            platformPaused = true;
+            stopMusic();
+            setYandexGameplay(false);
+          });
+          sdk.on?.("game_api_resume", () => {
+            platformPaused = false;
+            if (playing && !document.hidden) {
+              setYandexGameplay(true);
+              if (musicEnabled) startMusic();
+            }
+          });
+          return sdk;
+        } catch (error) {
+          console.warn("Yandex Games SDK initialization failed:", error);
+          return null;
+        }
+      })();
+
+      function setYandexGameplay(active) {
+        yandexGameplayActive = Boolean(active);
+        yandexSdkPromise.then((sdk) => {
+          const api = sdk?.features?.GameplayAPI;
+          if (!api) return;
+          if (yandexGameplayActive) api.start?.();
+          else api.stop?.();
+        });
+      }
+
       // Безопасное хранилище для VK Mini Apps и обычного браузера
       const safeStorage = (() => {
         const memory = new Map();
@@ -1036,7 +1096,10 @@
       // Российская сборка: онлайн-передача результатов отключена.
       // Личные рекорды и прогресс хранятся локально на устройстве игрока.
       const GAME_VERSION = "8.0";
-      const SHARE_GAME_URL = "https://vk.ru/app54887873";
+      const SHARE_GAME_URL =
+        window.location.origin === "null"
+          ? window.location.href.split("?")[0]
+          : window.location.origin + window.location.pathname;
       const incomingParams = new URLSearchParams(window.location.search);
       const challengeTarget = (() => {
         const value = Number(incomingParams.get("challenge"));
@@ -1299,8 +1362,13 @@
           "</tbody></table>";
       }
       document.addEventListener("visibilitychange", () => {
-        if (document.hidden) stopMusic();
-        else if (musicEnabled) startMusic();
+        if (document.hidden) {
+          stopMusic();
+          setYandexGameplay(false);
+        } else {
+          if (musicEnabled) startMusic();
+          if (playing && !platformPaused) setYandexGameplay(true);
+        }
       });
 
       let owned;
@@ -1627,7 +1695,7 @@
         const speed = Math.max(450, base - (level - 1) * 180);
 
         moveTimer = setInterval(() => {
-          if (playing) moveTarget();
+          if (playing && !document.hidden && !platformPaused) moveTarget();
         }, speed);
       }
 
@@ -1653,6 +1721,8 @@
         bonusTimeAwarded = 0;
         finishedThisRun = false;
         playing = true;
+        platformPaused = false;
+        setYandexGameplay(true);
 
         updateDisplay();
         $("resultPanel").classList.add("hidden");
@@ -1671,6 +1741,7 @@
         playSound(500);
 
         timer = setInterval(() => {
+          if (document.hidden || platformPaused) return;
           time--;
           $("time").textContent = time;
 
@@ -1683,6 +1754,7 @@
         clearInterval(timer);
         clearInterval(moveTimer);
         playing = false;
+        setYandexGameplay(false);
         target.style.display = "none";
         stopMusic();
 
@@ -1930,49 +2002,11 @@
       } else {
         $("legalGate").classList.remove("hidden");
       }
+
+      // Notify Yandex Games only after the page UI and initial screen are ready.
+      yandexSdkPromise.then((sdk) => {
+        sdk?.features?.LoadingAPI?.ready();
+      });
     </script>
-    <!-- VK Bridge: инициализация приложения ВКонтакте -->
-    <script
-      async
-      src="https://unpkg.com/@vkontakte/vk-bridge@2.14.2/dist/browser.min.js"
-      onload="
-        if (window.vkBridge && window.vkBridge.send) {
-          window.vkBridge.send('VKWebAppInit').then(function () {
-            var isMobileVK = /vk_platform=(mobile_web|mobile_android|mobile_iphone)/.test(window.location.search);
-            if (!isMobileVK) {
-              var lastHeight = 0;
-              var resizeTimer = null;
-              function resizeVkWindow() {
-                /* Не растягиваем окно VK под всю страницу: прокрутка остаётся внутри игры. */
-                var pageHeight = Math.min(
-                  Math.max(window.innerHeight || 740, 600),
-                  900
-                );
-                if (Math.abs(pageHeight - lastHeight) < 4) return;
-                lastHeight = pageHeight;
-                window.vkBridge.send('VKWebAppResizeWindow', {
-                  width: Math.min(Math.max(window.innerWidth || 911, 320), 1000),
-                  height: pageHeight
-                }).catch(function () {});
-              }
-              function scheduleVkResize() {
-                if (resizeTimer) clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(resizeVkWindow, 100);
-              }
-              resizeVkWindow();
-              if (window.ResizeObserver) {
-                var vkResizeObserver = new ResizeObserver(scheduleVkResize);
-                vkResizeObserver.observe(document.body);
-                vkResizeObserver.observe(document.documentElement);
-              }
-              window.addEventListener('resize', scheduleVkResize);
-              window.addEventListener('load', scheduleVkResize);
-              setTimeout(scheduleVkResize, 350);
-              setTimeout(scheduleVkResize, 1000);
-            }
-          }).catch(function () {});
-        }
-      "
-    ></script>
   </body>
 </html>
